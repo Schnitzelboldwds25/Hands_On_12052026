@@ -1,0 +1,82 @@
+﻿@page "/category"
+@inject IHttpClientFactory HttpClientFactory
+@using System.Text.Json.Nodes
+
+<MudText Typo="Typo.h4" GutterBottom="true">Kategorie-Suche</MudText>
+
+@* MudSelect für die Auswahl der Kategorie  *@
+<MudSelect T="string" Label="Kategorie auswählen" ValueChanged="OnCategorySelected" Class="mb-4">
+    <MudSelectItem Value="@("Beef")">Beef</MudSelectItem>
+    <MudSelectItem Value="@("Chicken")">Chicken</MudSelectItem>
+    <MudSelectItem Value="@("Seafood")">Seafood</MudSelectItem>
+    <MudSelectItem Value="@("Vegetarian")">Vegetarian</MudSelectItem>
+    <MudSelectItem Value="@("Vegan")">Vegan</MudSelectItem>
+</MudSelect>
+
+@* Lade-Zustand anzeigen [cite: 198] *@
+@if (isLoading)
+{
+    <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+}
+@* Fehler anzeigen, falls der Request schiefgeht [cite: 227] *@
+else if (error is not null)
+{
+    <MudAlert Severity="Severity.Error">@error</MudAlert>
+}
+@* Daten in einer MudList anzeigen, sobald sie da sind  *@
+    else if (mealData is not null && mealData["meals"] != null)
+    {
+        <MudList T="string">
+            @foreach (var meal in mealData["meals"]!.AsArray())
+            {
+                <MudListItem T="string">
+                    @* Bild und Name anzeigen (JsonNode dynamischer Zugriff) *@
+                    <div class="d-flex align-center">
+                        <MudImage Src="@((string)meal!["strMealThumb"]!)" Height="50" Width="50" Class="rounded-lg mr-3" />
+                        <MudText>@((string)meal!["strMeal"]!)</MudText>
+                    </div>
+                </MudListItem>
+            }
+        </MudList>
+    }
+
+@code {
+    // Variablen für den Zustand [cite: 178, 217]
+    private JsonNode? mealData;
+    private string? error;
+    private bool isLoading = false;
+
+    // Wird aufgerufen, wenn im Dropdown eine neue Kategorie gewählt wird
+    private async Task OnCategorySelected(string category)
+    {
+        if (string.IsNullOrWhiteSpace(category)) return;
+
+        // Zustand zurücksetzen für neuen Request
+        isLoading = true;
+        error = null;
+        mealData = null;
+
+        try
+        {
+            // Client erstellen und API aufrufen [cite: 181, 182, 183]
+            var http = HttpClientFactory.CreateClient();
+            
+            // Endpoint aus der Aufgabenstellung für Person C [cite: 260, 261]
+            string url = $"https://www.themealdb.com/api/json/v1/1/filter.php?c={category}"; //hier habe ich die filter option, den tipp aus der aufgabe benutzt
+            mealData = await http.GetFromJsonAsync<JsonNode>(url);
+        }
+        catch (HttpRequestException ex)
+        {
+            error = $"Netzwerkfehler: {ex.Message}"; // [cite: 222, 223]
+        }
+        catch (System.Text.Json.JsonException ex)
+        {
+            error = $"JSON konnte nicht geparst werden: {ex.Message}"; // [cite: 224, 225]
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged(); // UI manuell aktualisieren, da wir in einem async Event-Handler sind
+        }
+    }
+}
