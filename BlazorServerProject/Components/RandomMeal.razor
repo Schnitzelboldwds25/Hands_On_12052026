@@ -1,0 +1,43 @@
+﻿@page "/randommeal"
+@inject IHttpClientFactory HttpClientFactory
+@using System.Text.Json.Nodes
+
+<h3>Random Meal</h3>
+
+<MudButton OnClick="OnInitializedAsync">Hier Klicken bitte</MudButton>
+
+@if (meal != null)
+{
+    <MudCard>
+        <MudCardContent>
+            <MudText Typo="Typo.h5">
+                @meal["strMeal"]?.ToString()
+            </MudText>
+            <MudImage src="@meal["strMealThumb"]?.ToString()" width="300"></MudImage>
+        </MudCardContent>
+    </MudCard>
+    
+}
+else
+{
+    <p>Loading...</p>
+}
+
+@code {
+    
+    private JsonNode? meal;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var json = await GetRandomMealAsync();
+        meal = json?["meals"]?[0];
+    }
+
+    private async Task<JsonNode?> GetRandomMealAsync()
+    {
+        var http = HttpClientFactory.CreateClient();
+        return await http.GetFromJsonAsync<JsonNode>(
+            "https://www.themealdb.com/api/json/v1/1/random.php"
+        );
+    }
+}
