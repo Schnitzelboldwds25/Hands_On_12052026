@@ -1,0 +1,37 @@
+# Build artifacts
+bin/
+obj/
+
+# Visual Studio temporary files, build results, and
+# user-specific files
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Rider IDE files
+.idea/
+
+# Visual Studio Code settings
+.vscode/
+
+# Resharper
+*.ReSharper*
+
+# Mac/Linux system files
+.DS_Store
+Thumbs.db
+
+# NuGet packages
+*.nupkg
+*.snupkg
+packages/
+
+# ASP.NET temporary files
+wwwroot/lib/
+
+# Publish output
+publish/
+
+# Backup files
+*~ 
